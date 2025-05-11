@@ -1,18 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PDF Viewer</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    /* Add these styles if not in your styles.css */
+    #pdfViewerContainer {
+      height: calc(100vh - 150px); /* leave room for header & controls */
+      overflow-y: auto;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    canvas.pdf-page {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 6px;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    #pdfWrapper {
+      display: none; /* we no longer use this, but keeping it hidden to preserve original canvas */
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>Media Sphere PDF Viewer</h1>
   </header>
-  
-  <div class="container">
-    <aside id="pdfLibrary">
+
+  <div class="container" style="display: flex;">
+    <aside id="pdfLibrary" style="width: 250px;">
       <h2>PDF Library</h2>
       <input type="text" id="searchInput" placeholder="Search PDFs..." />
       <ul id="pdfList"></ul>
@@ -21,13 +42,13 @@
         <button id="addButton">Add to Library</button>
       </div>
     </aside>
-    
-    <main>
-      <div id="pdfControls">
+
+    <main style="flex: 1; padding: 0 20px;">
+      <div id="pdfControls" style="margin-bottom: 10px;">
         <div class="navigationControls">
           <button id="prevPage">Previous</button>
           <span>
-            <input type="number" id="pageNum" min="1" value="1">
+            <input type="number" id="pageNum" min="1" value="1" />
             <span id="pageCount">/ 1</span>
           </span>
           <button id="nextPage">Next</button>
@@ -38,19 +59,21 @@
           <button id="zoomIn">+</button>
         </div>
       </div>
-      <div id="pdfViewerContainer">
-        <div id="pdfWrapper">
-          <canvas id="pdfCanvas"></canvas>
-          <div id="textLayer"></div>
-        </div>
+
+      <div id="pdfViewerContainer"></div>
+
+      <!-- Original canvas retained (hidden) -->
+      <div id="pdfWrapper">
+        <canvas id="pdfCanvas" style="display: none;"></canvas>
+        <div id="textLayer"></div>
       </div>
     </main>
   </div>
-  
+
   <footer>
     <p>&copy; 2025 Media Sphere PDF Viewer. All rights reserved.</p>
   </footer>
-  
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"></script>
   <script src="renderer.js"></script>

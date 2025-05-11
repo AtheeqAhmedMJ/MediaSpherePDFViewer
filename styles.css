@@ -24,13 +24,22 @@ aside {
   background-color: #1C1C1C;
   padding: 20px;
   border-right: 1px solid #333;
+  position: fixed;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  overflow-y: auto;
 }
 
 main {
   flex: 1;
   padding: 20px;
+  margin-left: 320px; /* Adjust this to the width of the sidebar */
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 #pdfLibrary {
@@ -73,7 +82,7 @@ li.active {
 
 button {
   padding: 10px 15px;
-  margin-right:  5px;
+  margin-right: 5px;
   background-color: #008080;
   color: #FFFFFF;
   border: none;
@@ -117,20 +126,15 @@ button:hover {
   overflow: auto;
   background-color: #232323;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   padding: 20px;
   box-sizing: border-box;
+  margin-top: 70px; /* To prevent overlap with the header */
 }
-#pdfViewerContainer {
-  height: 100vh; /* Or fixed px height as needed */
-  overflow-y: auto;
-  position: relative;
-}
-
 
 #pdfWrapper {
-  position: relative;
+  width: 100%;
 }
 
 #textLayer {
@@ -145,11 +149,12 @@ button:hover {
   pointer-events: none;
 }
 
-#pdfCanvas {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+canvas.pdf-page {
+  margin-bottom: 20px;
+  max-width: 100%;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   background-color: white;
-  image-rendering: high-quality;
-  -ms-interpolation-mode: bicubic;
 }
 
 footer {
@@ -158,7 +163,6 @@ footer {
   padding: 15px;
 }
 
-/* Style for file input */
 #fileInput {
   color: #E0E0E0;
   display: block;
@@ -167,4 +171,17 @@ footer {
   background-color: #2A2A2A;
   border: 1px solid #333;
   border-radius: 4px;
+}
+
+#pdfViewerContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+#pdfViewerContainer::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 4px;
+}
+
+#pdfViewerContainer::-webkit-scrollbar-track {
+  background-color: #1C1C1C;
 }
