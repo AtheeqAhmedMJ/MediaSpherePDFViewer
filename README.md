@@ -5,10 +5,10 @@ Welcome to **Media Sphere PDF Viewer**—an intuitive, sleek, and feature-rich p
 
 Key Features:
 
-* Interactive PDF Navigation**: Seamlessly move between pages with the simple next/previous buttons or jump directly to any page using the intuitive page number input.
-* Zoom Functionality**: Customize your viewing experience with the zoom in and zoom out controls, allowing for precise adjustments to text and images.
-* Dynamic PDF Library**: Organize your PDFs efficiently with a dedicated sidebar that lets you browse, search, and manage your documents effortlessly. Add files directly from your system and keep everything well-organized in the sidebar.
-* Text Layer Support**: Our text layer ensures that text is selectable and searchable, making it easier to copy, highlight, or extract important information from your documents.
+* Interactive PDF Navigation: Seamlessly move between pages with the simple next/previous buttons or jump directly to any page using the intuitive page number input.
+* Zoom Functionality: Customize your viewing experience with the zoom in and zoom out controls, allowing for precise adjustments to text and images.
+* Dynamic PDF Library: Organize your PDFs efficiently with a dedicated sidebar that lets you browse, search, and manage your documents effortlessly. Add files directly from your system and keep everything well-organized in the sidebar.
+* Text Layer Support: Our text layer ensures that text is selectable and searchable, making it easier to copy, highlight, or extract important information from your documents.
 
 Designed for Productivity
 
