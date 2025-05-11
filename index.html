@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Viewer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Media Sphere PDF Viewer</h1>
+  </header>
+  
+  <div class="container">
+    <aside id="pdfLibrary">
+      <h2>PDF Library</h2>
+      <input type="text" id="searchInput" placeholder="Search PDFs..." />
+      <ul id="pdfList"></ul>
+      <div class="controls">
+        <input type="file" id="fileInput" accept="application/pdf" multiple />
+        <button id="addButton">Add to Library</button>
+      </div>
+    </aside>
+    
+    <main>
+      <div id="pdfControls">
+        <div class="navigationControls">
+          <button id="prevPage">Previous</button>
+          <span>
+            <input type="number" id="pageNum" min="1" value="1">
+            <span id="pageCount">/ 1</span>
+          </span>
+          <button id="nextPage">Next</button>
+        </div>
+        <div class="zoomControls">
+          <button id="zoomOut">-</button>
+          <span id="zoomLevel">100%</span>
+          <button id="zoomIn">+</button>
+        </div>
+      </div>
+      <div id="pdfViewerContainer">
+        <div id="pdfWrapper">
+          <canvas id="pdfCanvas"></canvas>
+          <div id="textLayer"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <footer>
+    <p>&copy; 2025 Media Sphere PDF Viewer. All rights reserved.</p>
+  </footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
