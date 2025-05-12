@@ -9,9 +9,10 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true
+      preload: path.join(__dirname, 'preload.js'), 
+      contextIsolation: true,                      
+      nodeIntegration: false,                      
+      enableRemoteModule: false                    
     },
     backgroundColor: '#121212'
   });
@@ -42,5 +43,84 @@ ipcMain.handle('read-file', async (event, filePath) => {
   } catch (error) {
     console.error('Error reading file:', error);
     return null;
+  }
+});
+
+// Check if file exists
+ipcMain.handle('file-exists', async (event, filePath) => {
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
+// Open file dialog
+ipcMain.handle('open-file-dialog', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'PDF Documents', extensions: ['pdf'] }]
+    });
+    
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths.map(filePath => ({
+        path: filePath,
+        name: path.basename(filePath)
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error opening file dialog:', error);
+    return [];
+  }
+});
+
+// Load PDF library from persistent storage
+ipcMain.handle('get-pdf-library', async () => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const libraryPath = path.join(userDataPath, 'pdf-library.json');
+    
+    try {
+      const data = await fs.promises.readFile(libraryPath, 'utf8');
+      const library = JSON.parse(data);
+      
+      // Filter out files that no longer exist
+      const validatedLibrary = [];
+      for (const item of library) {
+        try {
+          await fs.promises.access(item.path, fs.constants.F_OK);
+          validatedLibrary.push(item);
+        } catch {
+          // File no longer exists, skip it
+        }
+      }
+      
+      return validatedLibrary;
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        // File doesn't exist yet, return empty array
+        return [];
+      }
+      throw err;
+    }
+  } catch (error) {
+    console.error('Error loading PDF library:', error);
+    return [];
+  }
+});
+
+// Save PDF library to persistent storage
+ipcMain.handle('save-pdf-library', async (event, library) => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const libraryPath = path.join(userDataPath, 'pdf-library.json');
+    await fs.promises.writeFile(libraryPath, JSON.stringify(library));
+    return true;
+  } catch (error) {
+    console.error('Error saving PDF library:', error);
+    return false;
   }
 });

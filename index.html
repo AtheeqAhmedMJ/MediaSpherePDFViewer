@@ -3,66 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PDF Viewer</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <title>MediaSphere PDF Viewer</title>
+  <link rel="stylesheet" href="styles.css" />
+
   <style>
-    /* Add these styles if not in your styles.css */
+    /* Scroll only the viewer content */
+    .viewer {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      height: 100vh;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background-color: #1C1C1C;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333;
+    }
+
+    .page-nav, .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     #pdfViewerContainer {
-      height: calc(100vh - 150px); /* leave room for header & controls */
+      flex: 1;
       overflow-y: auto;
       padding: 20px;
       background: #f9f9f9;
     }
+
     canvas.pdf-page {
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 6px;
     }
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+
     #pdfWrapper {
-      display: none; /* we no longer use this, but keeping it hidden to preserve original canvas */
+      display: none;
     }
   </style>
 </head>
 <body>
+
   <header>
-    <h1>Media Sphere PDF Viewer</h1>
+    <h1>MediaSphere PDF Viewer</h1>
   </header>
 
-  <div class="container" style="display: flex;">
-    <aside id="pdfLibrary" style="width: 250px;">
-      <h2>PDF Library</h2>
-      <input type="text" id="searchInput" placeholder="Search PDFs..." />
-      <ul id="pdfList"></ul>
-      <div class="controls">
-        <input type="file" id="fileInput" accept="application/pdf" multiple />
-        <button id="addButton">Add to Library</button>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search PDFs..." />
       </div>
+      <div class="library-controls">
+        <button id="openButton">Open Files</button>
+      </div>
+      <ul id="pdfList" class="pdf-list"></ul>
     </aside>
 
-    <main style="flex: 1; padding: 0 20px;">
-      <div id="pdfControls" style="margin-bottom: 10px;">
-        <div class="navigationControls">
+    <!-- Main Viewer -->
+    <main class="viewer">
+      <div class="toolbar">
+        <div class="page-nav">
           <button id="prevPage">Previous</button>
-          <span>
-            <input type="number" id="pageNum" min="1" value="1" />
-            <span id="pageCount">/ 1</span>
-          </span>
+          <input type="number" id="pageNum" value="1" min="1" />
+          <span id="pageCount">/ 1</span>
           <button id="nextPage">Next</button>
         </div>
-        <div class="zoomControls">
+        <div class="zoom-controls">
           <button id="zoomOut">-</button>
           <span id="zoomLevel">100%</span>
           <button id="zoomIn">+</button>
         </div>
       </div>
 
-      <div id="pdfViewerContainer"></div>
+      <div id="pdfViewerContainer" class="pdf-container"></div>
 
-      <!-- Original canvas retained (hidden) -->
+      <!-- Optional original canvas -->
       <div id="pdfWrapper">
         <canvas id="pdfCanvas" style="display: none;"></canvas>
         <div id="textLayer"></div>
@@ -74,6 +98,7 @@
     <p>&copy; 2025 Media Sphere PDF Viewer. All rights reserved.</p>
   </footer>
 
+  <!-- Use CDN for pdf.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"></script>
   <script src="renderer.js"></script>

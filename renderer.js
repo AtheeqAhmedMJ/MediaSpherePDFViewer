@@ -1,146 +1,139 @@
-const { ipcRenderer } = require('electron');
-const fs = require('fs');
-const path = require('path');
-const pdfjsLib = window.pdfjsLib;
+document.addEventListener('DOMContentLoaded', async () => {
+  // Configure PDF.js worker from local node_modules
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.min.js';
 
-// Configure PDF.js worker and settings
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
-// Increase default rendering quality
-const CMAP_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/';
-const CMAP_PACKED = true;
-
-// Disable font rendering issues
-const DISABLE_FONT_FACE = false;
-
-// Store PDF file paths
-let pdfLibrary = [];
-let currentPdfDocument = null;
-let currentPage = 1;
-let currentZoom = 1.0;
-
-// Attempt to load library from local storage
-try {
-  const savedLibrary = localStorage.getItem('pdfLibrary');
-  if (savedLibrary) {
-    const parsedLibrary = JSON.parse(savedLibrary);
-    pdfLibrary = parsedLibrary.filter(item => fs.existsSync(item.path));
-  }
-} catch (error) {
-  console.error('Error loading saved library:', error);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const fileInput = document.getElementById('fileInput');
-  const addButton = document.getElementById('addButton');
+  // PDF viewer state
+  let pdfLibrary = [];
+  let currentPdfDocument = null;
+  let currentPage = 1;
+  let currentZoom = 1.0;
+  
+  // DOM elements
+  const openButton = document.getElementById('openButton');
   const pdfList = document.getElementById('pdfList');
   const searchInput = document.getElementById('searchInput');
-  const pdfCanvas = document.getElementById('pdfCanvas'); // still retained if needed
-  const ctx = pdfCanvas.getContext('2d');
-
+  const pdfViewerContainer = document.getElementById('pdfViewerContainer');
+  
   const prevPageButton = document.getElementById('prevPage');
   const nextPageButton = document.getElementById('nextPage');
   const pageNumInput = document.getElementById('pageNum');
   const pageCount = document.getElementById('pageCount');
-
+  
   const zoomInButton = document.getElementById('zoomIn');
   const zoomOutButton = document.getElementById('zoomOut');
   const zoomLevel = document.getElementById('zoomLevel');
-
+  
+  // Load PDF library on startup
+  try {
+    pdfLibrary = await window.electronAPI.getPdfLibrary();
+    refreshPdfList();
+  } catch (error) {
+    console.error('Error loading library:', error);
+  }
+  
+  // Refresh the PDF list with optional search filtering
   function refreshPdfList(searchTerm = '') {
     pdfList.innerHTML = '';
-
+    
     const filteredLibrary = searchTerm
       ? pdfLibrary.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
       : pdfLibrary;
-
+    
     filteredLibrary.forEach((item, index) => {
       const listItem = document.createElement('li');
       listItem.textContent = item.name;
-      listItem.dataset.index = index;
+      listItem.dataset.index = pdfLibrary.indexOf(item); // Store the actual index in the full library
       pdfList.appendChild(listItem);
     });
-
+    
     if (pdfLibrary.length > 0 && !currentPdfDocument) {
       loadPdf(pdfLibrary[0].path);
-      pdfList.children[0].classList.add('active');
+      if (pdfList.children[0]) {
+        pdfList.children[0].classList.add('active');
+      }
     }
   }
-
-  refreshPdfList();
-
+  
+  // Search functionality
   searchInput.addEventListener('input', (event) => {
     refreshPdfList(event.target.value);
   });
-
-  addButton.addEventListener('click', () => {
-    if (fileInput.files.length > 0) {
-      for (let i = 0; i < fileInput.files.length; i++) {
-        const file = fileInput.files[i];
-        const filePath = file.path;
-
-        if (!pdfLibrary.some(item => item.path === filePath)) {
-          pdfLibrary.push({
-            name: file.name,
-            path: filePath
-          });
-        }
-      }
-
-      try {
-        localStorage.setItem('pdfLibrary', JSON.stringify(pdfLibrary));
-      } catch (error) {
-        console.error('Error saving library:', error);
-      }
-
-      refreshPdfList(searchInput.value);
-      fileInput.value = '';
+  
+  // Add files via open dialog
+  openButton.addEventListener('click', async () => {
+    const files = await window.electronAPI.openFileDialog();
+    if (files.length > 0) {
+      addFilesToLibrary(files);
     }
   });
-
+  
+  // Add files to library and save
+  async function addFilesToLibrary(files) {
+    let hasNewFiles = false;
+    
+    for (const file of files) {
+      // Check if file exists and is not already in library
+      const exists = await window.electronAPI.fileExists(file.path);
+      if (exists && !pdfLibrary.some(item => item.path === file.path)) {
+        pdfLibrary.push(file);
+        hasNewFiles = true;
+      }
+    }
+    
+    if (hasNewFiles) {
+      await window.electronAPI.savePdfLibrary(pdfLibrary);
+      refreshPdfList(searchInput.value);
+    }
+  }
+  
+  // Handle PDF selection from list
   pdfList.addEventListener('click', (event) => {
     if (event.target.tagName === 'LI') {
       Array.from(pdfList.children).forEach(item => {
         item.classList.remove('active');
       });
-
+      
       event.target.classList.add('active');
-
+      
       const index = parseInt(event.target.dataset.index);
       if (!isNaN(index) && pdfLibrary[index]) {
         loadPdf(pdfLibrary[index].path);
       }
     }
   });
-
+  
+  // Load and render a PDF file
   async function loadPdf(filePath) {
     try {
       console.log('Loading PDF:', filePath);
-
+      
       currentPage = 1;
       pageNumInput.value = currentPage;
-
-      const base64Data = await ipcRenderer.invoke('read-file', filePath);
+      
+      // Read file using the exposed electronAPI
+      const base64Data = await window.electronAPI.readFile(filePath);
       if (!base64Data) {
         console.error('Failed to read PDF file');
         return;
       }
-
+      
+      // Convert base64 to binary array
       const binaryString = atob(base64Data);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-
-      const loadingTask = pdfjsLib.getDocument({
+      
+      // Load PDF document
+      const loadingTask = window.pdfjsLib.getDocument({
         data: bytes,
-        cMapUrl: CMAP_URL,
-        cMapPacked: CMAP_PACKED,
-        disableFontFace: DISABLE_FONT_FACE,
+        cMapUrl: 'node_modules/pdfjs-dist/cmaps/',
+        cMapPacked: true,
+        disableFontFace: false,
         nativeImageDecoderSupport: 'display',
         useSystemFonts: true
       });
-
+      
       loadingTask.promise.then(pdfDocument => {
         currentPdfDocument = pdfDocument;
         pageCount.textContent = `/ ${pdfDocument.numPages}`;
@@ -152,97 +145,119 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error in loadPdf:', error);
     }
   }
-
+  
+  // Clear the PDF viewer
   function clearViewer() {
-    const container = document.getElementById('pdfViewerContainer');
-    container.innerHTML = '';
+    pdfViewerContainer.innerHTML = '';
   }
-
+  
+  // Render all pages of the PDF (scrollable view)
   async function renderAllPages(pdfDoc) {
     clearViewer();
-    const container = document.getElementById('pdfViewerContainer');
-
+    
     for (let i = 1; i <= pdfDoc.numPages; i++) {
-      const page = await pdfDoc.getPage(i);
-      const containerWidth = container.clientWidth - 40;
-      const originalViewport = page.getViewport({ scale: 1 });
-      let scale = (containerWidth / originalViewport.width) * currentZoom;
-      const pixelRatio = window.devicePixelRatio || 1;
-      const viewport = page.getViewport({ scale });
-
-      const canvas = document.createElement('canvas');
-      canvas.classList.add('pdf-page');
-      canvas.dataset.pageNumber = i;
-      canvas.height = viewport.height * pixelRatio;
-      canvas.width = viewport.width * pixelRatio;
-      canvas.style.width = `${viewport.width}px`;
-      canvas.style.height = `${viewport.height}px`;
-      canvas.style.marginBottom = '20px';
-
-      const context = canvas.getContext('2d');
-      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-
-      await page.render({
-        canvasContext: context,
-        viewport,
-        enableWebGL: true,
-        renderInteractiveForms: true
-      }).promise;
-
-      container.appendChild(canvas);
+      try {
+        const page = await pdfDoc.getPage(i);
+        const containerWidth = pdfViewerContainer.clientWidth - 40;
+        const originalViewport = page.getViewport({ scale: 1 });
+        
+        // Calculate scale to fit width while respecting zoom level
+        let scale = (containerWidth / originalViewport.width) * currentZoom;
+        const pixelRatio = window.devicePixelRatio || 1;
+        const viewport = page.getViewport({ scale });
+        
+        // Create canvas for rendering
+        const canvas = document.createElement('canvas');
+        canvas.classList.add('pdf-page');
+        canvas.dataset.pageNumber = i;
+        canvas.height = viewport.height * pixelRatio;
+        canvas.width = viewport.width * pixelRatio;
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+        canvas.style.marginBottom = '20px';
+        
+        const context = canvas.getContext('2d');
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        
+        // Render page to canvas
+        await page.render({
+          canvasContext: context,
+          viewport,
+          enableWebGL: true,
+          renderInteractiveForms: true
+        }).promise;
+        
+        pdfViewerContainer.appendChild(canvas);
+      } catch (error) {
+        console.error(`Error rendering page ${i}:`, error);
+      }
     }
-
+    
     scrollToPage(currentPage);
   }
-
+  
+  // Scroll to a specific page
   function scrollToPage(pageNumber) {
-    const canvas = document.querySelector(`canvas[data-page-number="${pageNumber}"]`);
+    const canvas = pdfViewerContainer.querySelector(`canvas[data-page-number="${pageNumber}"]`);
     if (canvas) {
       canvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
-
+  
+  // Page navigation
   prevPageButton.addEventListener('click', () => {
     if (currentPage > 1) {
-      currentPage -= 1;
+      currentPage--;
       pageNumInput.value = currentPage;
       scrollToPage(currentPage);
     }
   });
-
+  
   nextPageButton.addEventListener('click', () => {
     if (currentPdfDocument && currentPage < currentPdfDocument.numPages) {
-      currentPage += 1;
+      currentPage++;
       pageNumInput.value = currentPage;
       scrollToPage(currentPage);
     }
   });
-
+  
   pageNumInput.addEventListener('change', () => {
+    if (!currentPdfDocument) return;
+    
     const newPage = parseInt(pageNumInput.value);
-    if (currentPdfDocument && !isNaN(newPage) && newPage >= 1 && newPage <= currentPdfDocument.numPages) {
+    if (!isNaN(newPage) && newPage >= 1 && newPage <= currentPdfDocument.numPages) {
       currentPage = newPage;
       scrollToPage(currentPage);
     } else {
       pageNumInput.value = currentPage;
     }
   });
-
+  
+  // Zoom controls
   zoomInButton.addEventListener('click', () => {
     currentZoom *= 1.2;
     zoomLevel.textContent = `${Math.round(currentZoom * 100)}%`;
-    renderAllPages(currentPdfDocument);
-  });
-
-  zoomOutButton.addEventListener('click', () => {
-    currentZoom /= 1.2;
-    zoomLevel.textContent = `${Math.round(currentZoom * 100)}%`;
-    renderAllPages(currentPdfDocument);
-  });
-
-  window.addEventListener('resize', () => {
     if (currentPdfDocument) {
       renderAllPages(currentPdfDocument);
     }
+  });
+  
+  zoomOutButton.addEventListener('click', () => {
+    currentZoom /= 1.2;
+    zoomLevel.textContent = `${Math.round(currentZoom * 100)}%`;
+    if (currentPdfDocument) {
+      renderAllPages(currentPdfDocument);
+    }
+  });
+  
+  // Handle window resizing
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      if (currentPdfDocument) {
+        renderAllPages(currentPdfDocument);
+      }
+    }, 200); // Debounce resize events
   });
 });

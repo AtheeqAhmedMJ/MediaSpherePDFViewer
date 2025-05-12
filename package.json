@@ -1,13 +1,57 @@
 {
-  "name": "electron-pdf-viewer",
+  "name": "mediasphere-pdf-viewer",
   "version": "1.0.0",
   "description": "An offline PDF viewer built with Electron",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
   },
+  "files": [
+    "index.html",
+    "main.js",
+    "preload.js",
+    "renderer.js",
+    "styles.css",
+    "assets/**/*",
+    "package.json"
+  ],
   "dependencies": {
-    "electron": "^27.0.0",
     "pdfjs-dist": "^5.0.375"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "mediasphere-pdf-viewer",
+    "productName": "Electron PDF Viewer",
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "styles.css",
+      "assets/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "icon": "assets/icon",
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "identity": null,
+      "hardenedRuntime": false,
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
   }
 }
