@@ -64,6 +64,7 @@
       </div>
       <div class="library-controls">
         <button id="openButton">Open Files</button>
+        <button id="closeAllBtn">Clear All</button>
       </div>
       <ul id="pdfList" class="pdf-list"></ul>
     </aside>
@@ -85,6 +86,7 @@
       </div>
 
       <div id="pdfViewerContainer" class="pdf-container"></div>
+      
 
       <!-- Optional original canvas -->
       <div id="pdfWrapper">
@@ -101,6 +103,8 @@
   <!-- Use CDN for pdf.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"></script>
-  <script src="renderer.js"></script>
+  <!-- <script src="renderer.js"></script> -->
+   <script type="module" src="renderer.js"></script>
+
 </body>
 </html>
