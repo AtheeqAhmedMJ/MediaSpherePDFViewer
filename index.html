@@ -67,6 +67,10 @@
         <button id="closeAllBtn">Clear All</button>
       </div>
       <ul id="pdfList" class="pdf-list"></ul>
+      <div class="bookmarks-section">
+        <h4>Bookmarks</h4>
+        <ul id="bookmarkList" class="bookmark-list"></ul>
+      </div>
     </aside>
 
     <!-- Main Viewer -->
@@ -77,6 +81,7 @@
           <input type="number" id="pageNum" value="1" min="1" />
           <span id="pageCount">/ 1</span>
           <button id="nextPage">Next</button>
+          <button id="bookmarkPageBtn" title="Bookmark this page">🔖</button>
         </div>
         <div class="zoom-controls">
           <button id="zoomOut">-</button>

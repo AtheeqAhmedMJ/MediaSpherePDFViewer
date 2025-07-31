@@ -124,3 +124,38 @@ ipcMain.handle('save-pdf-library', async (event, library) => {
     return false;
   }
 });
+
+// Bookmarks persistence
+ipcMain.handle('get-bookmarks', async () => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const bookmarksPath = path.join(userDataPath, 'bookmarks.json');
+    console.log('[IPC] get-bookmarks called, path:', bookmarksPath);
+    try {
+      const data = await fs.promises.readFile(bookmarksPath, 'utf8');
+      return JSON.parse(data);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.log('[IPC] bookmarks.json does not exist, returning empty object');
+        return {};
+      }
+      console.error('[IPC] Error reading bookmarks.json:', err);
+      throw err;
+    }
+  } catch (error) {
+    console.error('[IPC] Error loading bookmarks:', error);
+    return {};
+  }
+});
+ipcMain.handle('save-bookmarks', async (event, bookmarks) => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const bookmarksPath = path.join(userDataPath, 'bookmarks.json');
+    console.log('[IPC] save-bookmarks called, path:', bookmarksPath, 'data:', bookmarks);
+    await fs.promises.writeFile(bookmarksPath, JSON.stringify(bookmarks));
+    return true;
+  } catch (error) {
+    console.error('[IPC] Error saving bookmarks:', error);
+    return false;
+  }
+});
